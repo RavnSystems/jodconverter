@@ -72,7 +72,9 @@ public class OfficeUtils {
             }
             return findOfficeHome(
                 programFiles + File.separator + "OpenOffice.org 3",
-                programFiles + File.separator + "LibreOffice 3"
+                programFiles + File.separator + "LibreOffice 3",
+                programFiles + File.separator + "OpenOffice.org 4",
+                programFiles + File.separator + "LibreOffice 4"
             );
         } else if (PlatformUtils.isMac()) {
             return findOfficeHome(
@@ -103,6 +105,8 @@ public class OfficeUtils {
     public static File getOfficeExecutable(File officeHome) {
         if (PlatformUtils.isMac()) {
             return new File(officeHome, "MacOS/soffice.bin");
+        } else if (PlatformUtils.isWindows()) {
+            return new File(officeHome, "program/soffice.exe");
         } else {
             return new File(officeHome, "program/soffice.bin");
         }
