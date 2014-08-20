@@ -42,6 +42,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sigar.version>1.6.4</sigar.version>
     </properties>
 
     <repositories>
@@ -90,7 +91,7 @@
             <!-- for more robust process management -->
             <groupId>org.hyperic</groupId>
             <artifactId>sigar</artifactId>
-            <version>1.6.5.132</version>
+            <version>${sigar.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -114,6 +115,18 @@
 
     <build>
         <plugins>
+            <!--
+            Adding the Sigar libs to the java.library.path during the Unit tests
+            The Sigar libs are extracted during the test phase.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>once</forkMode>
+                    <argLine>-Djava.library.path=${project.build.directory}/lib/hyperic-sigar-1.6.4/sigar-bin/lib</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -156,6 +169,34 @@
                         <descriptor>src/main/assembly/dist.xml</descriptor>
                     </descriptors>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>unpack_sigar</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.hyperic</groupId>
+                                    <artifactId>sigar</artifactId>
+                                    <version>${sigar.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>hyperic-sigar-1.6.4/sigar-bin/lib/*</includes>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
