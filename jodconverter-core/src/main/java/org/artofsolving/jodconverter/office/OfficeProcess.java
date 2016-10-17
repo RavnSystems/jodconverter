@@ -85,12 +85,29 @@ class OfficeProcess {
         }
         logger.info(String.format("starting process with acceptString '%s' and profileDir '%s'", unoUrl, instanceProfileDir));
         process = processBuilder.start();
-        pid = processManager.findPid(processQuery);
-        if (pid == PID_NOT_FOUND) {
-            throw new IllegalStateException(String.format("process with acceptString '%s' started but its pid could not be found",
-                    unoUrl.getAcceptString()));
-        }
+        pid = getPid(processQuery);
         logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
+    }
+
+    /**
+     * @return the process pid if started within 1 minute. Otherwise, it throws
+     * @throws IOException
+     */
+    private long getPid(ProcessQuery processQuery) throws IOException {
+        for (int i = 0; i <= 60; i++) {
+            final long foundPid = processManager.findPid(processQuery);
+            if (foundPid != PID_NOT_FOUND)
+                return foundPid;
+            if (i != 60)
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+        }
+        throw new IllegalStateException(String.format("process with acceptString '%s' started but its pid could not be found",
+                unoUrl.getAcceptString()));
+
     }
 
     private File getInstanceProfileDir(File workDir, UnoUrl unoUrl) {
