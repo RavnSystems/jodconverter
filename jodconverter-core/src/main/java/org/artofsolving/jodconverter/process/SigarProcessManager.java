@@ -53,6 +53,17 @@ public class SigarProcessManager implements ProcessManager {
         }
     }
 
+    @Override
+    public boolean isRunning(long pid) {
+        Sigar sigar = new Sigar();
+        try {
+            return processExists(pid, sigar);
+        } finally {
+            sigar.close();
+        }
+
+    }
+
     public void kill(Process process, long pid) throws IOException {
         Sigar sigar = new Sigar();
         try {

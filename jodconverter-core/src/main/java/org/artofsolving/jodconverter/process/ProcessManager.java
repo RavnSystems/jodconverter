@@ -29,4 +29,6 @@ public interface ProcessManager {
      */
     long findPid(ProcessQuery query) throws IOException;
 
+    boolean isRunning(long pid);
+
 }

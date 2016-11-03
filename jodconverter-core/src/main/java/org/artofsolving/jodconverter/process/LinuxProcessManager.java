@@ -12,12 +12,12 @@
 //
 package org.artofsolving.jodconverter.process;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * {@link ProcessManager} implementation for Linux. Uses the <tt>ps</tt>
@@ -25,7 +25,7 @@ import org.apache.commons.io.IOUtils;
  * <p>
  * Should Work on Solaris too, except that the command line string
  * returned by <tt>ps</tt> there is limited to 80 characters and this affects
- * {@link #findPid(String)}.
+ * {@link #findPid(ProcessQuery)}.
  */
 public class LinuxProcessManager implements ProcessManager {
 
@@ -55,6 +55,17 @@ public class LinuxProcessManager implements ProcessManager {
             }
         }
         return PID_NOT_FOUND;
+    }
+
+    @Override
+    public boolean isRunning(long pid) {
+        try {
+            //nothing when the process is running
+            final List<String> foundPids = execute("/bin/kill", "-0", Long.toString(pid));
+            return foundPids.isEmpty();
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void kill(Process process, long pid) throws IOException {

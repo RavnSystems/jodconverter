@@ -97,6 +97,7 @@ class OfficeProcess {
         process = processBuilder.start();
         logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
         if(isNewInstallation()) {
+            waitForProcessToDie(pid);
             logger.warning("Restarting OOo after code 81 ...");
             process = processBuilder.start();
         }
@@ -134,7 +135,7 @@ class OfficeProcess {
     //wait for one minute
     private void waitForProcessToDie(long existingPid) {
         for(int i=0; i<60*4; i++){
-            if(!isRunning())
+            if(!isRunning(existingPid))
                 return;
                 try {
                     Thread.sleep(250);
@@ -250,11 +251,11 @@ class OfficeProcess {
         environment.put(pathKey, path);
     }
 
-    public boolean isRunning() {
+    public boolean isRunning(long pid) {
         if (process == null) {
             return false;
         }
-        return getExitCode() == null;
+        return getExitCode() == null || processManager.isRunning(pid);
     }
 
     private class ExitCodeRetryable extends Retryable {

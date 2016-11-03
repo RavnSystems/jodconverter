@@ -18,6 +18,11 @@ public class PureJavaProcessManager implements ProcessManager {
         return PID_UNKNOWN;
     }
 
+    @Override
+    public boolean isRunning(long pid) {
+        return false;
+    }
+
     public void kill(Process process, long pid) {
         process.destroy();
     }
