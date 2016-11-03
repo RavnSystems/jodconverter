@@ -167,14 +167,13 @@ class ManagedOfficeProcess {
         return connection.isConnected();
     }
 
+
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("\nSettings :");
-		sb.append(settings.toString());
-		sb.append("\nOffice Process :");
-		sb.append(process.toString());
+		final StringBuilder sb = new StringBuilder("ManagedOfficeProcess{");
+		sb.append("settings=").append(settings);
+		sb.append(", process=").append(process);
+		sb.append('}');
 		return sb.toString();
 	}
-
 }

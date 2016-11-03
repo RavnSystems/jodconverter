@@ -107,4 +107,15 @@ class PooledOfficeManager implements OfficeManager {
 		return managedOfficeProcess.isConnected();
 	}
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PooledOfficeManager{");
+        sb.append("settings=").append(settings);
+        sb.append(", managedOfficeProcess=").append(managedOfficeProcess);
+        sb.append(", stopping=").append(stopping);
+        sb.append(", taskCount=").append(taskCount);
+        sb.append(", currentTask=").append(currentTask);
+        sb.append('}');
+        return sb.toString();
+    }
 }

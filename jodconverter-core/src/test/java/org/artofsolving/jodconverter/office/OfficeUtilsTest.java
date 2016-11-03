@@ -12,17 +12,21 @@
 //
 package org.artofsolving.jodconverter.office;
 
-import static org.artofsolving.jodconverter.office.OfficeUtils.toUrl;
-import static org.testng.Assert.assertEquals;
+import org.testng.annotations.Test;
 
 import java.io.File;
 
+import static org.artofsolving.jodconverter.office.OfficeUtils.toUrl;
+import static org.testng.Assert.assertEquals;
+
 public class OfficeUtilsTest {
 
+    @Test
     public void testToUrl() {
         //TODO create separate tests for Windows
         assertEquals(toUrl(new File("/tmp/document.odt")), "file:///tmp/document.odt");
         assertEquals(toUrl(new File("/tmp/document with spaces.odt")), "file:///tmp/document%20with%20spaces.odt");
+        assertEquals(toUrl(new File("/tmp/")), "file:///tmp");
     }
 
 }

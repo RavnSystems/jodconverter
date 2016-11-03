@@ -301,4 +301,20 @@ class OfficeProcess {
         return getExitCode(retryInterval, retryTimeout);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("OfficeProcess{");
+        sb.append("officeHome=").append(officeHome);
+        sb.append(", unoUrl=").append(unoUrl);
+        sb.append(", runAsArgs=").append(Arrays.toString(runAsArgs));
+        sb.append(", templateProfileDir=").append(templateProfileDir);
+        sb.append(", instanceProfileDir=").append(instanceProfileDir);
+        sb.append(", processManager=").append(processManager);
+        sb.append(", killExistingProcess=").append(killExistingProcess);
+        sb.append(", startupWatcherTimeout=").append(startupWatcherTimeout);
+        sb.append(", process=").append(process);
+        sb.append(", pid=").append(pid);
+        sb.append('}');
+        return sb.toString();
+    }
 }
