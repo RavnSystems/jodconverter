@@ -95,7 +95,12 @@ class ManagedOfficeProcess {
 	public void restartDueToTaskTimeout() {
 		executor.execute(new Runnable() {
 			public void run() {
-				doTerminateProcess();
+                if(process.isRunning())
+				    doTerminateProcess();
+                else{
+                    logger.warning("Process timed out but wasn't running. Starting it. "+this);
+                    doStartProcessAndConnect();
+                }
 				// will cause unexpected disconnection and subsequent restart
 			}
 		});

@@ -97,7 +97,7 @@ class OfficeProcess {
         process = processBuilder.start();
         logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
         if(isNewInstallation()) {
-            waitForProcessToDie(pid);
+            waitForProcessToDie();
             logger.warning("Restarting OOo after code 81 ...");
             process = processBuilder.start();
         }
@@ -132,18 +132,23 @@ class OfficeProcess {
         return false;
     }
 
-    //wait for one minute
-    private void waitForProcessToDie(long existingPid) {
+    private void waitForProcessToDie(long pid){
         for(int i=0; i<60*4; i++){
-            if(!isRunning(existingPid))
+            if(!isRunning())
                 return;
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    break;
-                }
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                break;
             }
+        }
         throw new OfficeException("Unable to kill process with pid "+pid);
+    }
+
+
+    //wait for one minute
+    private void waitForProcessToDie() {
+        waitForProcessToDie(this.pid);
     }
 
     private void manageInputStreams(final Process process){
@@ -161,9 +166,9 @@ class OfficeProcess {
              BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             String line;
             while((line = bufferedReader.readLine())!=null)
-                logger.warning("soffice: "+ line);
+                logger.info("soffice: "+ line);
         } catch (IOException e) {
-            logger.warning(e.getMessage());
+            logger.info(e.getMessage());
         }
     }
 
@@ -251,7 +256,7 @@ class OfficeProcess {
         environment.put(pathKey, path);
     }
 
-    public boolean isRunning(long pid) {
+    public boolean isRunning() {
         if (process == null) {
             return false;
         }
