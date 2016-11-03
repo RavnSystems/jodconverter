@@ -12,11 +12,11 @@
 //
 package org.artofsolving.jodconverter.process;
 
-import java.io.IOException;
-
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.ptql.ProcessFinder;
+
+import java.io.IOException;
 
 /**
  * {@link ProcessManager} implementation that uses the SIGAR library.
@@ -35,9 +35,14 @@ public class SigarProcessManager implements ProcessManager {
         try {
             long[] pids = ProcessFinder.find(sigar, "State.Name.eq=" + query.getCommand());
             for (int i = 0; i < pids.length; i++) {
-                String[] arguments = sigar.getProcArgs(pids[i]);
-                if (arguments != null && argumentMatches(arguments, query.getArgument())) {
-                    return pids[i];
+                try {
+                    String[] arguments = sigar.getProcArgs(pids[i]); //throws an exception if the process died in between
+                    if (arguments != null && argumentMatches(arguments, query.getArgument())) {
+                        return pids[i];
+                    }
+                }
+                catch(SigarException ignore){
+                    //process has already died
                 }
             }
             return PID_NOT_FOUND;
@@ -53,10 +58,21 @@ public class SigarProcessManager implements ProcessManager {
         try {
             sigar.kill(pid, Sigar.getSigNum("KILL"));
         } catch (SigarException sigarException) {
+            if (!processExists(pid, sigar)) //check if it failed because the process didn't exist anymore
+                return;
             throw new IOException("kill failed", sigarException);
         } finally {
             sigar.close();
         }
+    }
+
+    private boolean processExists(long pid, Sigar sigar) {
+        try{
+            sigar.getProcArgs(pid);// throws exception if the process doesn't exist
+        } catch (SigarException ignore) {
+            return false;
+        }
+        return true;
     }
 
     private boolean argumentMatches(String[] arguments, String expected) {
