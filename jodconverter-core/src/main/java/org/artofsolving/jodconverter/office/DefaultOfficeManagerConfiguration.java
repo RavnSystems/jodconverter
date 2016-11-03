@@ -37,6 +37,8 @@ public class DefaultOfficeManagerConfiguration {
     private long taskExecutionTimeout = 120000L;  // 2 minutes
     private int maxTasksPerProcess = 200;
     private long retryTimeout = DEFAULT_RETRY_TIMEOUT;
+    private boolean killExistingProcess = DEFAULT_KILL_EXISTING_PROCESS;
+    private int startupWatcherTimeout = DEFAULT_STARTUP_WATCHER_TIMEOUT;
 
     private ProcessManager processManager = null;  // lazily initialised
 
@@ -154,6 +156,16 @@ public class DefaultOfficeManagerConfiguration {
         return this;
     }
 
+    public DefaultOfficeManagerConfiguration setKillExistingProcess(boolean killExistingProcess) {
+        this.killExistingProcess = killExistingProcess;
+        return this;
+    }
+
+    public DefaultOfficeManagerConfiguration setStartupWatcherTimeout(int startupWatcherTimeout) {
+        this.startupWatcherTimeout = startupWatcherTimeout;
+        return this;
+    }
+
     public OfficeManager buildOfficeManager() throws IllegalStateException {
         if (officeHome == null) {
             throw new IllegalStateException("officeHome not set and could not be auto-detected");
@@ -178,7 +190,7 @@ public class DefaultOfficeManagerConfiguration {
         for (int i = 0; i < numInstances; i++) {
             unoUrls[i] = (connectionProtocol == OfficeConnectionProtocol.PIPE) ? UnoUrl.pipe(pipeNames[i]) : UnoUrl.socket(portNumbers[i]);
         }
-        return new ProcessPoolOfficeManager(officeHome, unoUrls, runAsArgs, templateProfileDir, workDir, retryTimeout, taskQueueTimeout, taskExecutionTimeout, maxTasksPerProcess, processManager);
+        return new ProcessPoolOfficeManager(officeHome, unoUrls, runAsArgs, templateProfileDir, workDir, retryTimeout, taskQueueTimeout, taskExecutionTimeout, maxTasksPerProcess, processManager, killExistingProcess, startupWatcherTimeout);
     }
 
     private ProcessManager findBestProcessManager() {

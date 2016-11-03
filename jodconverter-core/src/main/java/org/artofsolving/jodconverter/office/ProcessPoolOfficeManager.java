@@ -12,13 +12,13 @@
 //
 package org.artofsolving.jodconverter.office;
 
+import org.artofsolving.jodconverter.process.ProcessManager;
+
 import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import org.artofsolving.jodconverter.process.ProcessManager;
 
 class ProcessPoolOfficeManager implements OfficeManager {
 
@@ -32,7 +32,7 @@ class ProcessPoolOfficeManager implements OfficeManager {
 
     public ProcessPoolOfficeManager(File officeHome, UnoUrl[] unoUrls, String[] runAsArgs, File templateProfileDir, File workDir,
             long retryTimeout, long taskQueueTimeout, long taskExecutionTimeout, int maxTasksPerProcess,
-            ProcessManager processManager) {
+            ProcessManager processManager, boolean killExistingProcess, int startupWatcherTimeout) {
 		this.taskQueueTimeout = taskQueueTimeout;
         pool = new ArrayBlockingQueue<PooledOfficeManager>(unoUrls.length);
         pooledManagers = new PooledOfficeManager[unoUrls.length];
@@ -46,6 +46,8 @@ class ProcessPoolOfficeManager implements OfficeManager {
             settings.setTaskExecutionTimeout(taskExecutionTimeout);
             settings.setMaxTasksPerProcess(maxTasksPerProcess);
             settings.setProcessManager(processManager);
+            settings.setKillExistingProcess(killExistingProcess);
+            settings.setStartupWatcherTimeout(startupWatcherTimeout);
             pooledManagers[i] = new PooledOfficeManager(settings);
         }
         logger.info("ProcessManager implementation is " + processManager.getClass().getSimpleName());
@@ -107,4 +109,14 @@ class ProcessPoolOfficeManager implements OfficeManager {
 		return running;
 	}
 
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ProcessPoolOfficeManager{");
+        sb.append("pool=").append(pool);
+        sb.append(", taskQueueTimeout=").append(taskQueueTimeout);
+        sb.append(", running=").append(running);
+        sb.append('}');
+        return sb.toString();
+    }
 }
