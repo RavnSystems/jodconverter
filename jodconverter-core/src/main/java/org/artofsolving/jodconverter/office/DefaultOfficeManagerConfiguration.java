@@ -12,17 +12,19 @@
 //
 package org.artofsolving.jodconverter.office;
 
-import java.io.File;
-
+import org.artofsolving.jodconverter.process.LinuxProcessManager;
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.PureJavaProcessManager;
-import org.artofsolving.jodconverter.process.LinuxProcessManager;
 import org.artofsolving.jodconverter.process.SigarProcessManager;
 import org.artofsolving.jodconverter.util.PlatformUtils;
+
+import java.io.File;
 
 public class DefaultOfficeManagerConfiguration {
 
     public static final long DEFAULT_RETRY_TIMEOUT = 120000L;
+    public static final boolean DEFAULT_KILL_EXISTING_PROCESS=false;
+    public static final int DEFAULT_STARTUP_WATCHER_TIMEOUT=30;
 
     private File officeHome = OfficeUtils.getDefaultOfficeHome();
     private OfficeConnectionProtocol connectionProtocol = OfficeConnectionProtocol.SOCKET;

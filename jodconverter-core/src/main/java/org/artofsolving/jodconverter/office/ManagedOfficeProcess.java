@@ -6,11 +6,14 @@
 // modify it under either (at your option) of the following licenses
 //
 // 1. The GNU Lesser General Public License v3 (or later)
-//    -> http://www.gnu.org/licenses/lgpl-3.0.txt
+//	-> http://www.gnu.org/licenses/lgpl-3.0.txt
 // 2. The Apache License, Version 2.0
-//    -> http://www.apache.org/licenses/LICENSE-2.0.txt
+//	-> http://www.apache.org/licenses/LICENSE-2.0.txt
 //
 package org.artofsolving.jodconverter.office;
+
+import com.sun.star.frame.XDesktop;
+import com.sun.star.lang.DisposedException;
 
 import java.net.ConnectException;
 import java.util.concurrent.ExecutorService;
@@ -19,12 +22,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.sun.star.frame.XDesktop;
-import com.sun.star.lang.DisposedException;
-
 class ManagedOfficeProcess {
 
-	private static final Integer EXIT_CODE_NEW_INSTALLATION = Integer.valueOf(81);
+	private static final Integer EXIT_CODE_NEW_INSTALLATION = 81;
 
 	private final ManagedOfficeProcessSettings settings;
 
@@ -37,8 +37,14 @@ class ManagedOfficeProcess {
 
 	public ManagedOfficeProcess(ManagedOfficeProcessSettings settings) throws OfficeException {
 		this.settings = settings;
-		process = new OfficeProcess(settings.getOfficeHome(), settings.getUnoUrl(), settings.getRunAsArgs(), settings.getTemplateProfileDir(), settings.getWorkDir(), settings
-				.getProcessManager());
+		process = new OfficeProcess(settings.getOfficeHome(),
+				settings.getUnoUrl(),
+				settings.getRunAsArgs(),
+				settings.getTemplateProfileDir(),
+				settings.getWorkDir(),
+				settings.getProcessManager(),
+				settings.isKillExistingProcess(),
+				settings.getStartupWatcherTimeout());
 		connection = new OfficeConnection(settings.getUnoUrl());
 	}
 
@@ -68,7 +74,7 @@ class ManagedOfficeProcess {
 		try {
 			future.get();
 		} catch (Exception exception) {
-			throw new OfficeException("failed to start and connect", exception);
+			throw new OfficeException("failed to stop", exception);
 		}
 	}
 
@@ -116,19 +122,7 @@ class ManagedOfficeProcess {
 					try {
 						connection.connect();
 					} catch (ConnectException connectException) {
-						Integer exitCode = process.getExitCode();
-						if (exitCode == null) {
-							// process is running; retry later
 							throw new TemporaryException(connectException);
-						} else if (exitCode.equals(EXIT_CODE_NEW_INSTALLATION)) {
-							// restart and retry later
-							// see http://code.google.com/p/jodconverter/issues/detail?id=84
-							logger.log(Level.WARNING, "office process died with exit code 81; restarting it");
-							process.start(true);
-							throw new TemporaryException(connectException);
-						} else {
-							throw new OfficeException("office process died with exit code " + exitCode);
-						}
 					}
 				}
 			}.execute(settings.getRetryInterval(), settings.getRetryTimeout());
@@ -169,8 +163,14 @@ class ManagedOfficeProcess {
 		}
 	}
 
-	boolean isConnected() {
-		return connection.isConnected();
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("\nSettings :");
+		sb.append(settings.toString());
+		sb.append("\nOffice Process :");
+		sb.append(process.toString());
+		return sb.toString();
 	}
 
 }

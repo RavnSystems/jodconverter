@@ -12,10 +12,10 @@
 //
 package org.artofsolving.jodconverter.office;
 
-import java.io.File;
-
 import org.artofsolving.jodconverter.process.ProcessManager;
 import org.artofsolving.jodconverter.process.PureJavaProcessManager;
+
+import java.io.File;
 
 class ManagedOfficeProcessSettings {
 
@@ -29,6 +29,8 @@ class ManagedOfficeProcessSettings {
     private ProcessManager processManager = new PureJavaProcessManager();
     private long retryTimeout = DefaultOfficeManagerConfiguration.DEFAULT_RETRY_TIMEOUT;
     private long retryInterval = DEFAULT_RETRY_INTERVAL;
+    private boolean killExistingProcess = DefaultOfficeManagerConfiguration.DEFAULT_KILL_EXISTING_PROCESS;
+    public int startupWatcherTimeout = DefaultOfficeManagerConfiguration.DEFAULT_STARTUP_WATCHER_TIMEOUT;
 
     public ManagedOfficeProcessSettings(UnoUrl unoUrl) {
         this.unoUrl = unoUrl;
@@ -94,4 +96,19 @@ class ManagedOfficeProcessSettings {
         this.retryInterval = retryInterval;
     }
 
+    public boolean isKillExistingProcess() {
+        return killExistingProcess;
+    }
+
+    public void setKillExistingProcess(boolean killExistingProcess) {
+        this.killExistingProcess = killExistingProcess;
+    }
+
+    public int getStartupWatcherTimeout() {
+        return startupWatcherTimeout;
+    }
+
+    public void setStartupWatcherTimeout(int startupWatcherTimeout) {
+        this.startupWatcherTimeout = startupWatcherTimeout;
+    }
 }

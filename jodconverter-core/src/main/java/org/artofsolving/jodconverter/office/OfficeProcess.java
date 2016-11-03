@@ -12,20 +12,20 @@
 //
 package org.artofsolving.jodconverter.office;
 
-import static org.artofsolving.jodconverter.process.ProcessManager.PID_NOT_FOUND;
-import static org.artofsolving.jodconverter.process.ProcessManager.PID_UNKNOWN;
-import java.io.File;
-import java.io.IOException;
+import org.apache.commons.io.FileUtils;
+import org.artofsolving.jodconverter.process.ProcessManager;
+import org.artofsolving.jodconverter.process.ProcessQuery;
+import org.artofsolving.jodconverter.util.PlatformUtils;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
-import org.artofsolving.jodconverter.process.ProcessManager;
-import org.artofsolving.jodconverter.process.ProcessQuery;
-import org.artofsolving.jodconverter.util.PlatformUtils;
+import static org.artofsolving.jodconverter.process.ProcessManager.PID_NOT_FOUND;
+import static org.artofsolving.jodconverter.process.ProcessManager.PID_UNKNOWN;
 
 class OfficeProcess {
 
@@ -35,17 +35,21 @@ class OfficeProcess {
     private final File templateProfileDir;
     private final File instanceProfileDir;
     private final ProcessManager processManager;
+    private final boolean killExistingProcess;
+    private final int startupWatcherTimeout;
 
     private Process process;
     private long pid = PID_UNKNOWN;
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager) {
+    public OfficeProcess(File officeHome, UnoUrl unoUrl, String[] runAsArgs, File templateProfileDir, File workDir, ProcessManager processManager, boolean killExistingProcess, int startupWatcherTimeout) {
         this.officeHome = officeHome;
         this.unoUrl = unoUrl;
         this.runAsArgs = runAsArgs;
         this.templateProfileDir = templateProfileDir;
+        this.killExistingProcess = killExistingProcess;
+        this.startupWatcherTimeout = startupWatcherTimeout;
         this.instanceProfileDir = getInstanceProfileDir(workDir, unoUrl);
         this.processManager = processManager;
     }
@@ -54,10 +58,16 @@ class OfficeProcess {
         start(false);
     }
 
-    public void start(boolean restart) throws IOException {
+    private void start(boolean restart) throws IOException {
         ProcessQuery processQuery = new ProcessQuery("soffice.bin", unoUrl.getAcceptString());
         long existingPid = processManager.findPid(processQuery);
-    	if (!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN)) {
+    	if (!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN) && killExistingProcess) {
+            logger.warning(String.format("a process with acceptString '%s' is already running; pid %s",
+                    unoUrl.getAcceptString(), existingPid));
+            processManager.kill(null, existingPid);
+            waitForProcessToDie(existingPid);
+        }
+        if(!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN)){
 			throw new IllegalStateException(String.format("a process with acceptString '%s' is already running; pid %d",
 			        unoUrl.getAcceptString(), existingPid));
         }
@@ -85,11 +95,79 @@ class OfficeProcess {
         }
         logger.info(String.format("starting process with acceptString '%s' and profileDir '%s'", unoUrl, instanceProfileDir));
         process = processBuilder.start();
-        pid = getPid(processQuery);
         logger.info("started process" + (pid != PID_UNKNOWN ? "; pid = " + pid : ""));
+        if(isNewInstallation()) {
+            logger.warning("Restarting OOo after code 81 ...");
+            process = processBuilder.start();
+        }
+        pid = getPid(processQuery);
+        manageInputStreams(process);
     }
 
-    /**
+
+    private boolean isNewInstallation() {
+        int exitValue = 0;
+        boolean exited = false;
+        final int timeout = startupWatcherTimeout * 2;
+        for (int i = 0; i < timeout; i++) {
+            try {
+                // wait for process to start
+                if(i!=0)
+                    Thread.sleep(500);
+            } catch (Exception ignore) {
+            }
+            try {
+                exitValue = process.exitValue();
+                // process is already dead, no need to wait longer ...
+                exited = true;
+                break;
+            } catch (IllegalThreadStateException e) {
+                // process is still up
+            }
+        }
+
+        if (exited && exitValue==81)
+                return true;
+        return false;
+    }
+
+    //wait for one minute
+    private void waitForProcessToDie(long existingPid) {
+        for(int i=0; i<60*4; i++){
+            if(!isRunning())
+                return;
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        throw new OfficeException("Unable to kill process with pid "+pid);
+    }
+
+    private void manageInputStreams(final Process process){
+        final Thread stdin = new Thread(() -> logStream(process.getInputStream()));
+        stdin.setDaemon(true);
+        stdin.start();
+
+        final Thread stderr = new Thread(() -> logStream(process.getErrorStream()));
+        stderr.setDaemon(true);
+        stderr.start();
+    }
+
+    private void logStream(InputStream inputStream) {
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+             BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+            String line;
+            while((line = bufferedReader.readLine())!=null)
+                logger.warning("soffice: "+ line);
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+        }
+    }
+
+
+        /**
      * @return the process pid if started within 1 minute. Otherwise, it throws
      * @throws IOException
      */
