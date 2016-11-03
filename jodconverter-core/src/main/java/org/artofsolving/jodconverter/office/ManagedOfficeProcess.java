@@ -163,6 +163,10 @@ class ManagedOfficeProcess {
 		}
 	}
 
+    boolean isConnected() {
+        return connection.isConnected();
+    }
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
