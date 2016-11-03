@@ -66,6 +66,7 @@ class OfficeProcess {
                     unoUrl.getAcceptString(), existingPid));
             processManager.kill(null, existingPid);
             waitForProcessToDie(existingPid);
+            existingPid = processManager.findPid(processQuery);
         }
         if(!(existingPid == PID_NOT_FOUND || existingPid == PID_UNKNOWN)){
 			throw new IllegalStateException(String.format("a process with acceptString '%s' is already running; pid %d",
