@@ -12,29 +12,29 @@
 //
 package org.artofsolving.jodconverter;
 
-import static org.artofsolving.jodconverter.office.OfficeUtils.cast;
+import com.sun.star.lang.XComponent;
+import com.sun.star.util.XRefreshable;
+import org.artofsolving.jodconverter.document.DocumentFamily;
+import org.artofsolving.jodconverter.document.DocumentFormat;
+import org.artofsolving.jodconverter.office.OfficeException;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.artofsolving.jodconverter.document.DocumentFamily;
-import org.artofsolving.jodconverter.document.DocumentFormat;
-import org.artofsolving.jodconverter.office.OfficeException;
-
-import com.sun.star.lang.XComponent;
-import com.sun.star.util.XRefreshable;
+import static org.artofsolving.jodconverter.office.OfficeUtils.cast;
 
 public class StandardConversionTask extends AbstractConversionTask {
 
     private final DocumentFormat outputFormat;
-
+    private final Map<String, ?> documentModifications;
     private Map<String,?> defaultLoadProperties;
     private DocumentFormat inputFormat;
 
-    public StandardConversionTask(File inputFile, File outputFile, DocumentFormat outputFormat) {
+    public StandardConversionTask(File inputFile, File outputFile, DocumentFormat outputFormat, Map<String, ?> documentModifications) {
         super(inputFile, outputFile);
         this.outputFormat = outputFormat;
+        this.documentModifications = documentModifications;
     }
 
     public void setDefaultLoadProperties(Map<String, ?> defaultLoadProperties) {
@@ -47,6 +47,7 @@ public class StandardConversionTask extends AbstractConversionTask {
 
     @Override
     protected void modifyDocument(XComponent document) throws OfficeException {
+        super.modifyDocument(document);
         XRefreshable refreshable = cast(XRefreshable.class, document);
         if (refreshable != null) {
             refreshable.refresh();
@@ -69,6 +70,11 @@ public class StandardConversionTask extends AbstractConversionTask {
     protected Map<String,?> getStoreProperties(File outputFile, XComponent document) {
         DocumentFamily family = OfficeDocumentUtils.getDocumentFamily(document);
         return outputFormat.getStoreProperties(family);
+    }
+
+    @Override
+    protected Map<String, ?> getDocumentModifications() {
+        return documentModifications;
     }
 
 }

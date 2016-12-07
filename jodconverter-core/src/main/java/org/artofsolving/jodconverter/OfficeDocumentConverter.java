@@ -12,10 +12,7 @@
 //
 package org.artofsolving.jodconverter;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.sun.star.document.UpdateDocMode;
 import org.apache.commons.io.FilenameUtils;
 import org.artofsolving.jodconverter.document.DefaultDocumentFormatRegistry;
 import org.artofsolving.jodconverter.document.DocumentFormat;
@@ -23,7 +20,10 @@ import org.artofsolving.jodconverter.document.DocumentFormatRegistry;
 import org.artofsolving.jodconverter.office.OfficeException;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
-import com.sun.star.document.UpdateDocMode;
+import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OfficeDocumentConverter {
 
@@ -60,13 +60,13 @@ public class OfficeDocumentConverter {
     public void convert(File inputFile, File outputFile) throws OfficeException {
         String outputExtension = FilenameUtils.getExtension(outputFile.getName());
         DocumentFormat outputFormat = formatRegistry.getFormatByExtension(outputExtension);
-        convert(inputFile, outputFile, outputFormat);
+        convert(inputFile, outputFile, outputFormat, Collections.EMPTY_MAP);
     }
 
-    public void convert(File inputFile, File outputFile, DocumentFormat outputFormat) throws OfficeException {
+    public void convert(File inputFile, File outputFile, DocumentFormat outputFormat, Map<String, ?> documentModifications) throws OfficeException {
         String inputExtension = FilenameUtils.getExtension(inputFile.getName());
         DocumentFormat inputFormat = formatRegistry.getFormatByExtension(inputExtension);
-        StandardConversionTask conversionTask = new StandardConversionTask(inputFile, outputFile, outputFormat);
+        StandardConversionTask conversionTask = new StandardConversionTask(inputFile, outputFile, outputFormat, documentModifications);
         conversionTask.setDefaultLoadProperties(defaultLoadProperties);
         conversionTask.setInputFormat(inputFormat);
         officeManager.execute(conversionTask);

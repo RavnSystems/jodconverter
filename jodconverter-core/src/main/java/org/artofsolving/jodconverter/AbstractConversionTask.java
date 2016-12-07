@@ -12,18 +12,8 @@
 //
 package org.artofsolving.jodconverter;
 
-import static org.artofsolving.jodconverter.office.OfficeUtils.SERVICE_DESKTOP;
-import static org.artofsolving.jodconverter.office.OfficeUtils.cast;
-import static org.artofsolving.jodconverter.office.OfficeUtils.toUnoProperties;
-import static org.artofsolving.jodconverter.office.OfficeUtils.toUrl;
-
-import java.io.File;
-import java.util.Map;
-
-import org.artofsolving.jodconverter.office.OfficeContext;
-import org.artofsolving.jodconverter.office.OfficeException;
-import org.artofsolving.jodconverter.office.OfficeTask;
-
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.document.RedlineDisplayType;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XStorable;
 import com.sun.star.io.IOException;
@@ -32,6 +22,14 @@ import com.sun.star.lang.XComponent;
 import com.sun.star.task.ErrorCodeIOException;
 import com.sun.star.util.CloseVetoException;
 import com.sun.star.util.XCloseable;
+import org.artofsolving.jodconverter.office.OfficeContext;
+import org.artofsolving.jodconverter.office.OfficeException;
+import org.artofsolving.jodconverter.office.OfficeTask;
+
+import java.io.File;
+import java.util.Map;
+
+import static org.artofsolving.jodconverter.office.OfficeUtils.*;
 
 public abstract class AbstractConversionTask implements OfficeTask {
 
@@ -46,6 +44,8 @@ public abstract class AbstractConversionTask implements OfficeTask {
     protected abstract Map<String,?> getLoadProperties(File inputFile);
 
     protected abstract Map<String,?> getStoreProperties(File outputFile, XComponent document);
+
+    protected abstract Map<String,?> getDocumentModifications();
 
     public void execute(OfficeContext context) throws OfficeException {
         XComponent document = null;
@@ -105,7 +105,20 @@ public abstract class AbstractConversionTask implements OfficeTask {
      * @throws OfficeException
      */
     protected void modifyDocument(XComponent document) throws OfficeException {
-    	// noop
+        Map<String,?> documentModifications = getDocumentModifications();
+        if(documentModifications!=null && !documentModifications.isEmpty()){
+            try {
+                final XPropertySet xPropSet = cast(XPropertySet.class, document);
+                for(Map.Entry<String, ?> entry: documentModifications.entrySet()) {
+                    xPropSet.setPropertyValue(entry.getKey(), entry.getValue());
+                    xPropSet.setPropertyValue("RedlineDisplayType", RedlineDisplayType.NONE);
+                }
+            } catch (Exception e) {
+                throw new OfficeException("Unable to set property", e);
+            }
+        }
+
+
     }
 
     private void storeDocument(XComponent document, File outputFile) throws OfficeException {

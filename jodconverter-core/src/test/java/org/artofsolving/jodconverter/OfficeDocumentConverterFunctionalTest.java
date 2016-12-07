@@ -12,20 +12,20 @@
 //
 package org.artofsolving.jodconverter;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import org.apache.commons.io.FilenameUtils;
+import org.artofsolving.jodconverter.document.DocumentFormat;
+import org.artofsolving.jodconverter.document.DocumentFormatRegistry;
+import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
+import org.artofsolving.jodconverter.office.OfficeManager;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 
-import org.apache.commons.io.FilenameUtils;
-import org.artofsolving.jodconverter.document.DocumentFormat;
-import org.artofsolving.jodconverter.document.DocumentFormatRegistry;
-import org.artofsolving.jodconverter.office.OfficeManager;
-import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertTrue;
 
 @Test(groups="functional")
 public class OfficeDocumentConverterFunctionalTest {
@@ -55,7 +55,7 @@ public class OfficeDocumentConverterFunctionalTest {
                     File outputFile = File.createTempFile("test", "." + outputFormat.getExtension());
                     outputFile.deleteOnExit();
                     System.out.printf("-- converting %s to %s... ", inputFormat.getExtension(), outputFormat.getExtension());
-                    converter.convert(inputFile, outputFile, outputFormat);
+                    converter.convert(inputFile, outputFile, outputFormat, Collections.EMPTY_MAP);
                     System.out.printf("done.\n");
                     assertTrue(outputFile.isFile() && outputFile.length() > 0);
                     //TODO use file detection to make sure outputFile is in the expected format
